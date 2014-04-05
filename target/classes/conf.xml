@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes>
+<!-- 
+	<port>X</port> => <listentPort>2000X</listenPort>
+	               => <messageRecvPort>3000X</messageRecvPort>
+ -->
+	<node>
+		<id>p1</id>
+		<port>1</port>
+		<link>
+			<node>p2</node>
+			<node>p3</node>
+		</link>
+	</node>
+	<node>
+		<id>p2</id>
+		<port>2</port>
+		<link>
+			<node>p4</node>
+			<node>p5</node>
+		</link>
+	</node>
+	<node>
+		<id>p3</id>
+		<port>3</port>
+		<link>
+			<node>p1</node>
+			<node>p6</node>
+			<node>p7</node>
+		</link>
+	</node>
+	<node>
+		<id>p4</id>
+		<port>4</port>
+		<link>
+			<node>p2</node>
+		</link>
+	</node>
+	<node>
+		<id>p5</id>
+		<port>5</port>
+		<link>
+			<node>p2</node>
+			<node>p6</node>
+		</link>
+	</node>
+	<node>
+		<id>p6</id>
+		<port>6</port>
+		<link>
+			<node>p3</node>
+			<node>p5</node>
+			<node>p7</node>
+		</link>
+	</node>
+	<node>
+		<id>p7</id>
+		<port>7</port>
+		<link>
+			<node>p3</node>
+			<node>p6</node>
+		</link>
+	</node>
+</nodes>
