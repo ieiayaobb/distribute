@@ -9,6 +9,16 @@ public class Node {
 	private int port;
 	
 	private List<Node> link;
+	
+	private boolean visited = false;
+	
+	public void setVisited(boolean visited) {
+		this.visited = visited;
+	}
+
+	public boolean isVisited() {
+		return visited;
+	}
 
 	public Node(){
 		this.link = new ArrayList<Node>();

@@ -1,16 +1,19 @@
 package com.core.handler.impl;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
 import com.core.bean.Node;
 import com.core.handler.INodeHandler;
 
@@ -21,9 +24,6 @@ public class NodeHandlerImpl implements INodeHandler {
 	private Node node;
 	
 	private ServerSocket listenServer;
-	private ServerSocket msgServer;
-	
-	private boolean visited = false;
 	
 	public NodeHandlerImpl(Node node){
 		this.node = node;
@@ -37,13 +37,6 @@ public class NodeHandlerImpl implements INodeHandler {
 		try {
 			listenServer = new ServerSocket(listenPort);
 			new listenThread();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {
-			msgServer = new ServerSocket(msgPort);
-			new msgThread();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -76,14 +69,16 @@ public class NodeHandlerImpl implements INodeHandler {
 			}
 			public void run(){
 				try {
-					BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					String line;
-					while(true){
-						line = br.readLine();
-						if(line != null){
-							log.info("message : " + line);
-						}
-					}
+					DataInputStream input = new DataInputStream(socket.getInputStream());
+					String messageStr = input.readUTF();
+					Map<String,String> message = JSON.parseObject(messageStr, Map.class);
+					
+					String nodeId = message.get("nodeId");
+					String linkNodeId = message.get("linkNodeId");
+					
+					log.info("==== Thread " + linkNodeId + " ==== " + "previous nodeId : " + nodeId);
+					
+					DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -91,25 +86,11 @@ public class NodeHandlerImpl implements INodeHandler {
 			}
 		}
 	}
-	class msgThread extends Thread{
-		public msgThread(){
-			start();
-		}
-		public void run(){
-			try {
-				Socket socket = msgServer.accept();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
 	
 	@Override
 	public void business() {
-		if(!this.visited){
-			log.info("visit node : " + node);
-			visited = true;
+		if(!node.isVisited()){
+			log.info("==== Thread " + node.getId() + " ==== " + "visiting node : " + node);
 			
 			fireRequest();
 		}
@@ -121,8 +102,15 @@ public class NodeHandlerImpl implements INodeHandler {
 			try {
 				int linkPort = 20000 + linkNode.getPort();
 				Socket socket = new Socket("127.0.0.1",linkPort);
-				PrintWriter out = new PrintWriter(socket.getOutputStream());
-				out.write("abc");
+				OutputStream netOut = socket.getOutputStream();  
+	            DataOutputStream doc = new DataOutputStream(netOut);  
+	            log.info("==== Thread " + node.getId() + " ==== " + "target Node : " + "p" + linkNode.getPort() + ", visited? " + linkNode.isVisited());
+	            
+	            Map<String,String> message = new HashMap<String,String>();
+	            message.put("nodeId", node.getId());
+	            message.put("linkNodeId", linkNode.getId());
+	            
+	            doc.writeUTF(JSON.toJSONString(message));
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -131,5 +119,6 @@ public class NodeHandlerImpl implements INodeHandler {
 				e.printStackTrace();
 			}
 		}
+		node.setVisited(true);
 	}
 }
