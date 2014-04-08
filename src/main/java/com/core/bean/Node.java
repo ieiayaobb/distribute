@@ -4,24 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
-	private String id;
+	protected String id;
 	
 	private int port;
 	
-	private List<Node> link;
-	
 	private boolean visited = false;
 	
-	public void setVisited(boolean visited) {
-		this.visited = visited;
-	}
-
-	public boolean isVisited() {
-		return visited;
-	}
-
+	private List<String> link;
+	
+	protected List<Integer> topK = new ArrayList<Integer>();
+	
 	public Node(){
-		this.link = new ArrayList<Node>();
+		this.link = new ArrayList<String>();
 	}
 	
 	public String getId() {
@@ -39,13 +33,40 @@ public class Node {
 	public void setPort(int port) {
 		this.port = port;
 	}
+	
+	public void setTopK(List<Integer> topK) {
+		this.topK = topK;
+	}
 
-	public List<Node> getLink() {
+	public void pushTop(int value){
+		this.topK.add(value);
+	}
+	
+	public void setVisited(boolean visited) {
+		this.visited = visited;
+	}
+
+	public boolean isVisited() {
+		return visited;
+	}
+	public List<Integer> getSortedTopK(int k){
+		List<Integer> tempList = new ArrayList<Integer>();
+		for(int i = 0;i < k;i++){
+			tempList.add(this.topK.get(i));
+		}
+		return tempList;
+	}
+	
+	public List<Integer> getTopK() {
+		return this.topK;
+	}
+	
+	public List<String> getLink() {
 		return link;
 	}
 
-	public void addNode(Node node){
-		this.link.add(node);
+	public void addNode(String nodeId){
+		this.link.add(nodeId);
 	}
 	
 	public String toString(){
@@ -53,11 +74,14 @@ public class Node {
 		
 		if(this.link.size() > 0){
 			returnStr += "link : ";
-			for(Node node : this.link){
-				returnStr += node.getId();
-				returnStr += ",";
+			for(String nodeId : this.link){
+				returnStr += nodeId;
+				returnStr += " ";
 			}
 		}
+		returnStr += ",";
+		
+		returnStr += this.topK; 
 		
 		return returnStr;
 	}

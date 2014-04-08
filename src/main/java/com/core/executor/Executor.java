@@ -37,8 +37,8 @@ public class Executor {
 		}
 		
 		log.info("pick one handler ");
-		INodeHandler p1Handler = nodeHandlerMap.get("p2");
-		p1Handler.business();
+		INodeHandler p1Handler = nodeHandlerMap.get("p1");
+		p1Handler.start(allNodes.get("p1"));
 		
 	}
 

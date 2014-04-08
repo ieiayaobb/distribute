@@ -2,7 +2,6 @@
 <nodes>
 <!-- 
 	<port>X</port> => <listentPort>2000X</listenPort>
-	               => <messageRecvPort>3000X</messageRecvPort>
  -->
 	<node>
 		<id>p1</id>
@@ -11,14 +10,29 @@
 			<node>p2</node>
 			<node>p3</node>
 		</link>
+		<top>
+		    <value>21</value>
+		    <value>75</value>
+		    <value>23</value>
+		    <value>43</value>
+		    <value>76</value>
+		</top>
 	</node>
 	<node>
 		<id>p2</id>
 		<port>2</port>
 		<link>
+		    <node>p1</node>
 			<node>p4</node>
 			<node>p5</node>
 		</link>
+		<top>
+		    <value>44</value>
+		    <value>23</value>
+		    <value>75</value>
+		    <value>85</value>
+		    <value>78</value>
+		</top>
 	</node>
 	<node>
 		<id>p3</id>
@@ -28,6 +42,13 @@
 			<node>p6</node>
 			<node>p7</node>
 		</link>
+		<top>
+		    <value>34</value>
+		    <value>67</value>
+		    <value>85</value>
+		    <value>33</value>
+		    <value>53</value>
+		</top>
 	</node>
 	<node>
 		<id>p4</id>
@@ -35,6 +56,13 @@
 		<link>
 			<node>p2</node>
 		</link>
+		<top>
+		    <value>56</value>
+		    <value>34</value>
+		    <value>67</value>
+		    <value>54</value>
+		    <value>23</value>
+		</top>
 	</node>
 	<node>
 		<id>p5</id>
@@ -43,6 +71,13 @@
 			<node>p2</node>
 			<node>p6</node>
 		</link>
+		<top>
+		    <value>45</value>
+		    <value>23</value>
+		    <value>57</value>
+		    <value>95</value>
+		    <value>34</value>
+		</top>
 	</node>
 	<node>
 		<id>p6</id>
@@ -52,6 +87,13 @@
 			<node>p5</node>
 			<node>p7</node>
 		</link>
+		<top>
+		    <value>23</value>
+		    <value>62</value>
+		    <value>16</value>
+		    <value>74</value>
+		    <value>32</value>
+		</top>
 	</node>
 	<node>
 		<id>p7</id>
@@ -60,5 +102,12 @@
 			<node>p3</node>
 			<node>p6</node>
 		</link>
+		<top>
+		    <value>21</value>
+		    <value>32</value>
+		    <value>41</value>
+		    <value>23</value>
+		    <value>56</value>
+		</top>
 	</node>
 </nodes>

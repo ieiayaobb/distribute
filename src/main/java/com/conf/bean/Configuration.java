@@ -6,7 +6,7 @@ import java.util.Map;
 import com.core.bean.Node;
 
 public class Configuration {
-	private Map<String,Node> allNodes;
+	private static Map<String,Node> allNodes;
 	private Map<String,Integer> portList;
 	
 	public Configuration(){
@@ -20,8 +20,8 @@ public class Configuration {
 	public void setNode(String key, Node node){
 		this.allNodes.put(key, node);
 	}
-	public Node getNode(String key){
-		return this.allNodes.get(key);
+	public static Node getNode(String key){
+		return allNodes.get(key);
 	}
 
 	public Map<String, Integer> getPortList() {

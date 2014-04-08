@@ -1,10 +1,14 @@
 package com.core.handler;
 
+import com.core.bean.Node;
+
 public interface INodeHandler {
 	
 	void startListen();
 	
-	void business();
+	void business(Node node);
 	
-	void fireRequest();
+	void fireRequest(Node node);
+	
+	void start(Node node);
 }

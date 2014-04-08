@@ -1,6 +1,8 @@
 package com.conf.handler;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -31,6 +33,12 @@ public class ConfigLoader {
 				Node node = new Node();
 				node.setId(nodeEle.elementText("id"));
 				node.setPort(Integer.parseInt(nodeEle.elementText("port")));
+				
+				for(Object top : nodeEle.element("top").elements("value")){
+					Element topEle = (Element)top;
+					node.pushTop(Integer.parseInt(topEle.getText()));
+				}
+				
 				log.info("node : " + node);
 				conf.setNode(node.getId(), node);
 			}
@@ -41,9 +49,12 @@ public class ConfigLoader {
 				Node node = conf.getNode(key);
 				
 				for(Object linkObj : nodeEle.element("link").elements("node")){
-					Node linkNode = conf.getNode(((Element)linkObj).getText());
+					String linkNode = ((Element)linkObj).getText();
 					node.addNode(linkNode);
 				}
+				
+				List<Integer> originalTop = node.getTopK();
+				Collections.sort(originalTop);
 			}
 		} catch (DocumentException e) {
 			// TODO Auto-generated catch block
