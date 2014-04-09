@@ -1,4 +1,4 @@
-package com.gen;
+package com.gen.core;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -7,13 +7,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MatrixGenerator {
 	private int length;
 	private int matrix;
 	private String result;
+	
+	private String timeStamp;
+	
 	public MatrixGenerator(int length, int matrix){
+		
+		timeStamp = new Date().getTime() + "";
+		
 		this.length = length;
 		this.matrix = matrix;
 		StringBuffer sb = new StringBuffer();
@@ -29,7 +36,7 @@ public class MatrixGenerator {
 		result = sb.toString();
 	}
 	public void outputFile(){
-		File file = new File("m" + length + "n" + matrix + ".txt");
+		File file = new File("m" + length + "n" + matrix + "_" + timeStamp + ".txt");
 		try {
 			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
 			

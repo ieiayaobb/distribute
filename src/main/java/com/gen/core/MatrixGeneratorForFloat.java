@@ -1,4 +1,4 @@
-package com.gen;
+package com.gen.core;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import com.gen.bean.Point;
 
 public class MatrixGeneratorForFloat {
 	private int length;
@@ -27,13 +29,14 @@ public class MatrixGeneratorForFloat {
 	public String generate(Boolean isOriginal){
 		StringBuffer sb = new StringBuffer();
 		
-		List<List<Double>> result = new ArrayList<List<Double>>();
+		List<List<Point>> result = new ArrayList<List<Point>>();
 		
 		for(int i = 0 ; i < length;i++){
-			List<Double> eachResult = new ArrayList<Double>();
+			List<Point> eachResult = new ArrayList<Point>();
 			for(int j = 0; j < matrix;j++){
 				double randomNum = Math.random() * 100;
-				eachResult.add(randomNum);
+				Point point = new Point(j,randomNum);
+				eachResult.add(point);
 				if(isOriginal){
 					Collections.sort(eachResult,new DescComparator());
 				}
@@ -43,17 +46,18 @@ public class MatrixGeneratorForFloat {
 		
 		for(int l = 0; l < matrix; l++){
 			for(int k = 0; k < length; k++){
-				double first = result.get(k).get(0);
+				double first = result.get(k).get(0).getNum();
+				sb.append(result.get(k).get(l).getId() + " : ");
 				if(isOriginal){
-					sb.append(String.format("%.3f",result.get(k).get(l) / first));
+					sb.append(String.format("%.3f",result.get(k).get(l).getNum() / first));
 				}else{
-					sb.append(String.format("%.3f",result.get(k).get(l)));
+					sb.append(String.format("%.3f",result.get(k).get(l).getNum()));
 				}
 				sb.append("\t");
 			}
 			sb.append("\n");
 		}
-		
+		System.out.println(sb.toString());
 		return sb.toString();
 	}
 	public void outputFile(){
@@ -83,6 +87,6 @@ public class MatrixGeneratorForFloat {
 		}
 	}
 	public static void main(String[] args){
-		new MatrixGeneratorForFloat(12, 10).outputFile();;
+		new MatrixGeneratorForFloat(12, 10).outputFile();
 	}
 }
