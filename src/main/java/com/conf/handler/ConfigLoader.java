@@ -3,6 +3,7 @@ package com.conf.handler;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -16,6 +17,11 @@ import com.core.bean.Node;
 
 public class ConfigLoader {
 	private static final Logger log = LoggerFactory.getLogger(ConfigLoader.class);
+	
+	public Configuration load(Map<String,Node> nodePool){
+		Configuration conf = new Configuration();
+		return conf;
+	}
 	
 	public Configuration load(String path){
 		log.info("file path : " + path);
@@ -55,6 +61,8 @@ public class ConfigLoader {
 				
 				List<Integer> originalTop = node.getTopK();
 				Collections.sort(originalTop);
+				
+				node.setStock();
 			}
 		} catch (DocumentException e) {
 			// TODO Auto-generated catch block

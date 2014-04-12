@@ -33,13 +33,40 @@ public class Executor {
 			
 			INodeHandler nodeHandler = new NodeHandlerImpl(node);
 			nodeHandlerMap.put(nodeKey, nodeHandler);
-			nodeHandler.startListen();
+			
+			if(!NodeHandlerImpl.isListening()){
+				nodeHandler.startListen();
+			}
 		}
+//		NodeHandlerImpl.setListening(true);
+		
+		start(allNodes, nodeHandlerMap);
+		
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for(String nodeKey : allNodes.keySet()){
+			Node node  = allNodes.get(nodeKey);
+			node.setStarted(false);
+		}
+		
+		start(allNodes, nodeHandlerMap);
+		
+//		for(String nodeHanlderKey : nodeHandlerMap.keySet()){
+//			nodeHandlerMap.get(nodeHanlderKey).closeListen();
+//		}
+		
+	}
+	private static void start(Map<String,Node> allNodes, Map<String,INodeHandler> nodeHandlerMap){
+		
+		NodeHandlerImpl.traceCount = allNodes.size();
 		
 		log.info("pick one handler ");
 		INodeHandler p1Handler = nodeHandlerMap.get("p1");
 		p1Handler.start(allNodes.get("p1"));
-		
 	}
-
 }

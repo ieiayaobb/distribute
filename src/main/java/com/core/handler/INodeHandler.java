@@ -11,4 +11,6 @@ public interface INodeHandler {
 	void fireRequest(Node node);
 	
 	void start(Node node);
+	
+	void closeListen();
 }

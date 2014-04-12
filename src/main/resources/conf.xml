@@ -15,7 +15,7 @@
 		    <value>75</value>
 		    <value>23</value>
 		    <value>43</value>
-		    <value>76</value>
+		    <value>99</value>
 		</top>
 	</node>
 	<node>
@@ -28,7 +28,7 @@
 		</link>
 		<top>
 		    <value>44</value>
-		    <value>23</value>
+		    <value>96</value>
 		    <value>75</value>
 		    <value>85</value>
 		    <value>78</value>
@@ -86,6 +86,7 @@
 			<node>p3</node>
 			<node>p5</node>
 			<node>p7</node>
+			<node>p8</node>
 		</link>
 		<top>
 		    <value>23</value>
@@ -107,6 +108,20 @@
 		    <value>32</value>
 		    <value>41</value>
 		    <value>23</value>
+		    <value>56</value>
+		</top>
+	</node>
+	<node>
+		<id>p8</id>
+		<port>8</port>
+		<link>
+			<node>p6</node>
+		</link>
+		<top>
+		    <value>45</value>
+		    <value>78</value>
+		    <value>90</value>
+		    <value>11</value>
 		    <value>56</value>
 		</top>
 	</node>
