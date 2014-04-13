@@ -10,7 +10,7 @@ public interface INodeHandler {
 	
 	void fireRequest(Node node);
 	
-	void start(Node node);
+	void start(Node node, int topValue);
 	
-	void closeListen();
+//	void closeListen();
 }

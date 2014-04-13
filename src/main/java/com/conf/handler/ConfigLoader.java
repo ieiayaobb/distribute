@@ -20,6 +20,10 @@ public class ConfigLoader {
 	
 	public Configuration load(Map<String,Node> nodePool){
 		Configuration conf = new Configuration();
+		for(String key : nodePool.keySet()){
+			conf.setNode(key, nodePool.get(key));
+		}
+		
 		return conf;
 	}
 	
@@ -44,6 +48,7 @@ public class ConfigLoader {
 					Element topEle = (Element)top;
 					node.pushTop(Integer.parseInt(topEle.getText()));
 				}
+				node.saveValue();
 				
 				log.info("node : " + node);
 				conf.setNode(node.getId(), node);

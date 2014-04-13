@@ -12,12 +12,19 @@ import com.core.handler.impl.NodeHandlerImpl;
 public class ConfGenerator {
 	private static final Logger log = LoggerFactory.getLogger(ConfGenerator.class);
 	
-	public ConfGenerator(int num){
-		this.generateNode(num);
+	public ConfGenerator(){
 	}
-	private Map<String,Node> generateNode(int num){
+	public Map<String,Node> generateNode(int num, int valueNum){
 		Map<String,Node> nodePool = new HashMap<String,Node>();
 		Node p1Node = new Node("p1");
+		for(int k = 0; k < valueNum; k ++){
+			p1Node.pushTop((int) Math.round(Math.random() * 100));
+		}
+		p1Node.saveValue();
+		p1Node.setPort(1);
+		p1Node.setStock();
+		
+		
 		nodePool.put("p1", p1Node);
 		
 		for(int i = 1;i < num;i++){
@@ -25,24 +32,31 @@ public class ConfGenerator {
 			
 			Node node = new Node(newKey);
 			int relationNum = (int) Math.ceil(Math.random() * nodePool.size());
-			log.info("relationNum : " + relationNum);
+//			log.info("relationNum : " + relationNum);
 			for(int j = 0;j < relationNum;j++){
 				int index = (int) Math.ceil(Math.random() * nodePool.size());
 				if(!node.getLink().contains("p" + index)){
-					log.info("index : " + index);
+//					log.info("index : " + index);
 					node.addLinkNodeId("p" + index);
-					log.info("node : " + node);
+//					log.info("node : " + node);
 					Node poolNode = nodePool.get("p" + index);
-					log.info("poolNode : " + poolNode);
+//					log.info("poolNode : " + poolNode);
 					poolNode.addLinkNodeId(newKey);
+					
 				}
 			}
+			for(int k = 0; k < valueNum; k ++){
+				node.pushTop((int) Math.round(Math.random() * 100));
+			}
+			node.saveValue();
 			nodePool.put(newKey, node);
+			node.setPort(i + 1);
+			node.setStock();
 		}
 		log.info(nodePool + "");
 		return nodePool;
 	}
 	public static void main(String[] args){
-		new ConfGenerator(10);
+		new ConfGenerator().generateNode(10, 15);
 	}
 }

@@ -2,8 +2,10 @@ package com.core.bean;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,12 +16,28 @@ public class Node {
 	public Node(String id){
 		this.id = id;
 		this.link = new ArrayList<String>();
+		this.stock = new Stock();
+		this.stockPair = new HashMap<String,Map<String,Integer>>();
 	}
 	
+	private int k;
+	
+	public int getK() {
+		return k;
+	}
+
+	public void setK(int k) {
+		this.k = k;
+	}
+
 	private Map<String,Integer> stockValue;
 	
 	private Map<String,Map<String,Integer>> stockPair;
 	
+	public Map<String, Map<String, Integer>> getStockPair() {
+		return stockPair;
+	}
+
 	protected String id;
 	
 	private int port;
@@ -104,11 +122,13 @@ public class Node {
 		for(int value : this.topK){
 			this.stock.add(value);
 		}
-		stockValue = this.stock.convert();
+		this.stockValue = this.stock.convert();
 		
-		this.stockPair.put("self", stockValue);
+		this.stockValue = sortStockValue(this.stockValue);
+		this.stockPair.put("self", this.stockValue);
 	}
 	public void putStockPair(String key, Map<String,Integer> stockValue){
+		stockValue = sortStockValue(stockValue);
 		this.stockPair.put(key, stockValue);
 		
 		Iterator ite = stockValue.entrySet().iterator();
@@ -124,8 +144,60 @@ public class Node {
 				this.stockValue.put(stockKey, value);
 			}
 		}
-		
+		this.stockValue = sortStockValue(this.stockValue);
 	}
+	
+	public Map<String,Integer> sortStockValue(Map<String,Integer> stockValue){
+		Map<String,Integer> toSortedStockValue = new LinkedHashMap<String,Integer>();
+		List<String> toSortedKeys = new ArrayList<String>();
+		for(String key : stockValue.keySet()){
+			toSortedKeys.add(key);
+		}
+		Collections.sort(toSortedKeys,new Comparator<String>(){
+			@Override
+			public int compare(String o1, String o2) {
+				int o1left =Integer.parseInt(o1.split("-")[0]);
+				int o2left =Integer.parseInt(o2.split("-")[0]);
+				if(o1left < o2left){
+					return 1;
+				}else if(o1left > o2left){
+					return -1;
+				}
+				return 0;
+			}
+		});
+		for(String key : toSortedKeys){
+			toSortedStockValue.put(key, stockValue.get(key));
+		}
+		return toSortedStockValue;
+	}
+	
+	private List<String> includeKeys(int k){
+		List<String> keys = new ArrayList<String>();
+		int sum = 0;
+		for(String key : this.stockValue.keySet()){
+			sum += this.stockValue.get(key);
+			keys.add(key);
+			if(k < sum){
+				break;
+			}
+		}
+		return keys;
+	}
+	
+	public int getNumFromStockValue(String stockKey, int num){
+		List<String> keys = includeKeys(num);
+		Map<String,Integer> stockValue = this.stockPair.get(stockKey);
+		int total = 0;
+		for(String key : keys){
+			if(stockValue.containsKey(key)){
+				total += stockValue.get(key);
+			}
+		}
+		total = total > num ? num : total;
+		return total;
+	}
+	
 	public Map<String,Integer> getStock(){
 		return stockValue;
 	}
@@ -153,6 +225,22 @@ public class Node {
 		this.topK.add(value);
 	}
 	
+	private List<Integer> originalTopK = new ArrayList<Integer> ();
+	public void saveValue(){
+//		System.arraycopy(topK, 0, originalTopK, 0, topK.size());
+		for(Integer value : topK){
+			originalTopK.add(value);
+		}
+		
+	}
+	public void resetValue(){
+//		this.topK = originalTopK;
+		topK = new ArrayList<Integer>();
+		for(Integer value : originalTopK){
+			topK.add(value);
+		}
+		Collections.sort(this.topK);
+	}
 	
 	public List<Integer> getSortedTopK(int k){
 		List<Integer> tempList = new ArrayList<Integer>();

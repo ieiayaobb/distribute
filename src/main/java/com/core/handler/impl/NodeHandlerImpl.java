@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.conf.bean.Configuration;
 import com.core.bean.Node;
+import com.core.executor.Executor;
 import com.core.handler.INodeHandler;
 
 public class NodeHandlerImpl implements INodeHandler {
@@ -33,25 +34,25 @@ public class NodeHandlerImpl implements INodeHandler {
 	
 	private static Node startNode;
 	
-	private static final int TOP_K = 5;
-	
 	private ServerSocket listenServer;
 	private ServerSocket msgServer;
 	
-	private boolean msgFlag = true;
+//	private static boolean listenFlag = false;
 	
-	private boolean callbackFlag = false;
-	
-	private static boolean isListening = false;
-	
-	public static boolean isListening() {
-		return isListening;
-	}
-
-	public static void setListening(boolean isListening) {
-		NodeHandlerImpl.isListening = isListening;
-	}
-
+//	private boolean msgFlag = true;
+//	
+//	private boolean callbackFlag = false;
+//	
+//	private static boolean isListening = false;
+//	
+//	public static boolean isListening() {
+//		return isListening;
+//	}
+//
+//	public static void setListening(boolean isListening) {
+//		NodeHandlerImpl.isListening = isListening;
+//	}
+//
 	public NodeHandlerImpl(Node node){
 		this.node = node;
 	}
@@ -62,6 +63,9 @@ public class NodeHandlerImpl implements INodeHandler {
 		int listenPort = 20000 + port;
 		int msgPort = 30000 + port;
 		try {
+			
+//			listenFlag = true;
+			
 			listenServer = new ServerSocket(listenPort);
 			msgServer = new ServerSocket(msgPort);
 			new listenThread();
@@ -115,10 +119,14 @@ public class NodeHandlerImpl implements INodeHandler {
 					Node sourceNode = Configuration.getNode(sourceId);
 					Node targetNode = Configuration.getNode(targetId);
 					
+					int k = (int)message.get("k");
+					log.info(threadName + " k : " + k);
+					targetNode.setK(k);
+					
 					targetNode.setLevel(sourceNode.getLevel() + 1);
 					targetNode.setParentNode(sourceNode);
 					
-					log.info(threadName + "sourceNode : " + sourceNode.getId() + " responseNumIncrese");
+//					log.info(threadName + "sourceNode : " + sourceNode.getId() + " responseNumIncrese");
 					sourceNode.responseNumIncrese();
 					
 //					log.info(threadName + "showLinkStartedStatus : " + targetNode.showLinkStartedStatus());
@@ -164,8 +172,12 @@ public class NodeHandlerImpl implements INodeHandler {
 			Map<String,Object> request = new HashMap<String,Object>();
 			request.put("sourceId", sourceId);
 			request.put("targetId", targetId);
-			request.put("topK", targetNode.getSortedTopK(TOP_K));
-			request.put("stock", targetNode.getStock());
+			String threadName = "==== Thread " + targetId + " response     ==== ";
+			log.info(threadName + "topk : " + targetNode.getK());
+			request.put("topK", targetNode.getSortedTopK(targetNode.getK()));
+			if(Executor.isFirst){
+				request.put("stock", targetNode.getStock());
+			}
 			
 			dos.writeUTF(JSON.toJSONString(request));
 			dos.flush();
@@ -181,7 +193,6 @@ public class NodeHandlerImpl implements INodeHandler {
 	
 	private void callback(){
 		log.info("======== callback ========");
-		
 		
 		Collections.sort(leafResult,new nodeLevelComparator());
 		log.info("leafResult" + leafResult);
@@ -243,9 +254,15 @@ public class NodeHandlerImpl implements INodeHandler {
 //			log.info("========= wait for response finish =========");
 		}
 		log.info("======== finish ========");
-//		log.info(startNode.getSortedTopK(TOP_K) + "");
-		log.info(startNode.getStock() + "");
+		log.info(startNode.getSortedTopK(startNode.getK()) + "");
+		
+		if(Executor.isFirst){
+			log.info(startNode.getStock() + "");
+		}
+		Executor.isFirst = false;
 //		msgFlag = false;
+		log.info("================================================================================================");
+		log.info("================================================================================================");
 	}
 	
 	class nodeLevelComparator implements Comparator<Node>{
@@ -268,7 +285,7 @@ public class NodeHandlerImpl implements INodeHandler {
 			start();
 		}
 		public void run(){
-			while(msgFlag){
+			while(true){
 				try {
 					Socket socket = msgServer.accept();
 					new msgContainer(socket);
@@ -294,7 +311,10 @@ public class NodeHandlerImpl implements INodeHandler {
 					String sourceId = (String) message.get("sourceId");
 					String targetId = (String) message.get("targetId");
 					List<Integer> topK =  (List<Integer>)message.get("topK");
-					Map<String,Integer> stock = (Map<String,Integer>)message.get("stock");
+					Map<String,Integer> stock = null;
+					if(Executor.isFirst){
+						stock = (Map<String,Integer>)message.get("stock");
+					}
 					
 					Node sourceNode = Configuration.getNode(sourceId);
 					Node targetNode = Configuration.getNode(targetId);
@@ -308,11 +328,13 @@ public class NodeHandlerImpl implements INodeHandler {
 					
 //					log.info(threadName + "sourceNode : " + sourceNode.getId() + " responseNumDecrese");
 					
-//					log.info(threadName + "topK : " + topK + " , " + targetId + " ==> " + sourceId);
-					log.info(threadName + "stock : " + stock + " , " + targetId + " ==> " + sourceId);
-					
-					sourceNode.putStockPair(targetId, stock);
-					
+					log.info(threadName + "topK : " + topK + " , " + targetId + " ==> " + sourceId);
+					if(Executor.isFirst){
+						sourceNode.putStockPair(targetId, stock);
+						log.info(threadName + targetId + " ==> " + sourceId);
+						log.info(threadName + "sourceNode.getStock() : " + sourceNode.getStock());
+						log.info(threadName + "sourceNode.getStockPair() : " + sourceNode.getStockPair());
+					}
 					sourceNode.merge(topK);
 					sourceNode.responseNumDecrese();
 					
@@ -325,10 +347,11 @@ public class NodeHandlerImpl implements INodeHandler {
 		}
 	}
 	
-	public void start(Node node){
+	public void start(Node node, int topValue){
 		log.info("==== Thread " + node.getId() + " Main       ==== " + "visiting node : " + node);
 		
 		startNode = node;
+		node.setK(topValue);
 		node.setStarted(true);
 		node.setFinished(true);
 		fireRequest(node);
@@ -336,7 +359,8 @@ public class NodeHandlerImpl implements INodeHandler {
 	@Override
 	public void business(Node node) {
 //		if(!node.isVisited()){
-			log.info("==== Thread " + node.getId() + " Main       ==== " + "visiting node : " + node);
+			String threadName = "==== Thread " + node.getId() + " Main       ==== ";
+			log.info(threadName + "visiting node : " + node);
 //			node.setVisited(true);
 			
 			fireRequest(node);
@@ -344,62 +368,81 @@ public class NodeHandlerImpl implements INodeHandler {
 	}
 	
 	@Override
-	public void fireRequest(Node node) {
+	public void fireRequest(Node sourceNode) {
 		
-		String threadName = "==== Thread " + node.getId() + " Main       ==== ";
+		String threadName = "==== Thread " + sourceNode.getId() + " Main       ==== ";
 		
-		log.info(threadName + "showLinkStartedStatus : " + node.showLinkStartedStatus());
+		log.info(threadName + "showLinkStartedStatus : " + sourceNode.showLinkStartedStatus());
+		log.info(threadName + "stockPair : " + sourceNode.getStockPair());
+		log.info(threadName + "topk : " + sourceNode.getK());
 		
-		for(String targetNodeId : node.getLink()){
-			try {
+		for(String targetNodeId : sourceNode.getLink()){
 				Node targetNode = Configuration.getNode(targetNodeId);
 //				nodeLock.lock();
-				node.setLeaf(targetNode.isStarted());
-				if(!targetNode.isStarted()){
-					targetNode.setStarted(true);
-					int linkPort = 20000 + targetNode.getPort();
-					Socket socket = new Socket("127.0.0.1",linkPort);
-		            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());  
-		            
-		            /**
-		             * 			1)	source ===> target
-		             * 			2)	target ===> source
-		             */
-		            
-		            
-		            Map<String,Object> request = new HashMap<String,Object>();
-		            request.put("sourceId", node.getId());
-		            request.put("targetId", targetNodeId);
-		            
-		            dos.writeUTF(JSON.toJSONString(request));
-		            dos.flush();
+				sourceNode.setLeaf(targetNode.isStarted());
+				
+				if(Executor.isFirst){
+					if(!targetNode.isStarted()){
+						send(targetNode, sourceNode);
+					}
+				}else{
+					if(targetNode.getParentNode() != null){
+						if(targetNode.getParentNode().getId() == sourceNode.getId()){
+							send(targetNode, sourceNode);
+						}
+					}
 				}
 				
-				
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
-		if(node.isLeaf()){
-			leafResult.add(node);
+		if(sourceNode.isLeaf()){
+			leafResult.add(sourceNode);
 		}
 	}
-
-	@Override
-	public void closeListen() {
-		while(msgFlag){
-			
-		}
+	private void send(Node targetNode, Node sourceNode){
+		targetNode.setStarted(true);
+		int linkPort = 20000 + targetNode.getPort();
+		Socket socket;
 		try {
-			listenServer.close();
-			msgServer.close();
+			socket = new Socket("127.0.0.1",linkPort);
+			DataOutputStream dos = new DataOutputStream(socket.getOutputStream());  
+			
+			/**
+			 * 			1)	source ===> target
+			 * 			2)	target ===> source
+			 */
+			
+			Map<String,Object> request = new HashMap<String,Object>();
+			request.put("sourceId", sourceNode.getId());
+			request.put("targetId", targetNode.getId());
+			int k;
+			if(Executor.isFirst){
+				k = sourceNode.getK();
+			}else{
+				k = sourceNode.getNumFromStockValue(targetNode.getId(), sourceNode.getK());
+			}
+			request.put("k", k);
+			
+			dos.writeUTF(JSON.toJSONString(request));
+			dos.flush();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+//	@Override
+//	public void closeListen() {
+//		while(msgFlag){
+//			
+//		}
+//		try {
+//			listenServer.close();
+//			msgServer.close();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
 }
