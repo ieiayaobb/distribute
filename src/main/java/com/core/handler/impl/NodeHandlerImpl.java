@@ -37,6 +37,8 @@ public class NodeHandlerImpl implements INodeHandler {
 	private ServerSocket listenServer;
 	private ServerSocket msgServer;
 	
+	private static int totalK = 0;
+	
 //	private static boolean listenFlag = false;
 	
 //	private boolean msgFlag = true;
@@ -53,6 +55,11 @@ public class NodeHandlerImpl implements INodeHandler {
 //		NodeHandlerImpl.isListening = isListening;
 //	}
 //
+	
+//	public static void resetLeafResult(){
+//		leafResult = new ArrayList<Node>(); 
+//	}
+	
 	public NodeHandlerImpl(Node node){
 		this.node = node;
 	}
@@ -86,7 +93,7 @@ public class NodeHandlerImpl implements INodeHandler {
 					Socket socket = listenServer.accept();
 					new ClientContainer(socket);
 //					listenServer.close();
-//					log.info("------ connect -------");
+//					log.debug("------ connect -------");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -114,35 +121,36 @@ public class NodeHandlerImpl implements INodeHandler {
 					this.setName(threadName);
 					
 					
-//					log.info(threadName + "previous nodeId : " + sourceId);
+//					log.debug(threadName + "previous nodeId : " + sourceId);
 					
 					Node sourceNode = Configuration.getNode(sourceId);
 					Node targetNode = Configuration.getNode(targetId);
 					
-					int k = (int)message.get("k");
-					log.info(threadName + " k : " + k);
+					int k = (Integer)message.get("k");
+					
+//					log.debug(threadName + " k : " + k);
 					targetNode.setK(k);
 					
 					targetNode.setLevel(sourceNode.getLevel() + 1);
 					targetNode.setParentNode(sourceNode);
 					
-//					log.info(threadName + "sourceNode : " + sourceNode.getId() + " responseNumIncrese");
+//					log.debug(threadName + "sourceNode : " + sourceNode.getId() + " responseNumIncrese");
 					sourceNode.responseNumIncrese();
 					
-//					log.info(threadName + "showLinkStartedStatus : " + targetNode.showLinkStartedStatus());
+//					log.debug(threadName + "showLinkStartedStatus : " + targetNode.showLinkStartedStatus());
 					business(targetNode);
 //					waitUntilFinish(targetNode,sourceNode);
 					
-//					log.info(threadName + "showLinkStartedStatus : " + targetNode.showLinkStartedStatus());
+//					log.debug(threadName + "showLinkStartedStatus : " + targetNode.showLinkStartedStatus());
 					
 //					if(targetNode.getId().equals("p4")){
-//						log.info("");
+//						log.debug("");
 //					}
 //					
 //					while(sourceNode.getResponseNum() > 0){
-//						log.info(threadName + "======= wait =======");
+//						log.debug(threadName + "======= wait =======");
 //					}
-//					log.info(threadName + "======= pass =======");
+//					log.debug(threadName + "======= pass =======");
 					
 					if(--traceCount == 1){
 						callback();
@@ -159,7 +167,7 @@ public class NodeHandlerImpl implements INodeHandler {
 	}
 	private void response(String sourceId,String targetId){
 		
-//		log.info(" targetId : " + targetId + " ===> " + " sourceId : " + sourceId);
+//		log.debug(" targetId : " + targetId + " ===> " + " sourceId : " + sourceId);
 		
 		Node sourceNode = Configuration.getNode(sourceId);
 		Node targetNode = Configuration.getNode(targetId);
@@ -173,7 +181,7 @@ public class NodeHandlerImpl implements INodeHandler {
 			request.put("sourceId", sourceId);
 			request.put("targetId", targetId);
 			String threadName = "==== Thread " + targetId + " response     ==== ";
-			log.info(threadName + "topk : " + targetNode.getK());
+			log.debug(threadName + "topk : " + targetNode.getK());
 			request.put("topK", targetNode.getSortedTopK(targetNode.getK()));
 			if(Executor.isFirst){
 				request.put("stock", targetNode.getStock());
@@ -190,12 +198,35 @@ public class NodeHandlerImpl implements INodeHandler {
 		}
 		
 	}
+	private static List<Node> savedLeafResult = new ArrayList<Node>();
+	
+	class NodeComparator implements Comparator<Node>{
+
+		@Override
+		public int compare(Node o1, Node o2) {
+			int o1level = o1.getLevel();
+			int o2level = o2.getLevel();
+			if(o1level >= o2level){
+				return -1;
+			}else if(o1level < o2level){
+				return 1;
+			}
+			return 0;
+		}
+		
+	}
 	
 	private void callback(){
-		log.info("======== callback ========");
+		log.debug("======== callback ========");
 		
-		Collections.sort(leafResult,new nodeLevelComparator());
-		log.info("leafResult" + leafResult);
+		Collections.sort(leafResult, new NodeComparator());
+		log.debug("leafResult" + leafResult);
+		
+		if(Executor.isFirst){
+			for(Node leaf : leafResult){
+				savedLeafResult.add(leaf);
+			}
+		}
 		
 		int maxLevel = leafResult.get(0).getLevel();
 		
@@ -220,11 +251,11 @@ public class NodeHandlerImpl implements INodeHandler {
 //			maxLevel --;
 //		}
 		
-//		log.info("maxLevel : " + maxLevel);
+//		log.debug("maxLevel : " + maxLevel);
 		for(int i = maxLevel;i >= 0;i--){
-//			log.info("i : " + i);
+//			log.debug("i : " + i);
 			for(int j = 0;j < leafResult.size();){
-//				log.info("leafResult : " + leafResult);
+//				log.debug("leafResult : " + leafResult);
 				Node node = leafResult.get(j);
 				Node pNode = node.getParentNode();
 				if(node.getLevel() == i){
@@ -251,34 +282,23 @@ public class NodeHandlerImpl implements INodeHandler {
 	private void finish(){
 		
 		while(startNode.getResponseNum() != 0){
-//			log.info("========= wait for response finish =========");
+//			log.debug("startNode.getResponseNum() : " + startNode.getResponseNum());
 		}
-		log.info("======== finish ========");
-		log.info(startNode.getSortedTopK(startNode.getK()) + "");
+		log.debug("======== finish ========");
+		log.debug(startNode.getSortedTopK(startNode.getK()) + "");
 		
 		if(Executor.isFirst){
-			log.info(startNode.getStock() + "");
+			log.debug(startNode.getStock() + "");
 		}
 		Executor.isFirst = false;
 //		msgFlag = false;
 		log.info("================================================================================================");
+		log.debug("==================== " + "begin : " + begin + " ====================");
+		log.debug("==================== " + "now : " + System.currentTimeMillis() + " ====================");
+		log.info("==================== " + "cost : " + (System.currentTimeMillis() - begin) + " ms " + " ====================");
+		log.info("==================== " + "total k : " + totalK * 4 + "B " + " ====================");
 		log.info("================================================================================================");
 	}
-	
-	class nodeLevelComparator implements Comparator<Node>{
-
-		@Override
-		public int compare(Node o1, Node o2) {
-			if(o1.getLevel() >= o2.getLevel()){
-				return -1;
-			}else if(o1.getLevel() < o2.getLevel()){
-				return 1;
-			}
-			return 1;
-		}
-		
-	}
-	
 	
 	class msgThread extends Thread{
 		public msgThread(){
@@ -326,14 +346,14 @@ public class NodeHandlerImpl implements INodeHandler {
 					String threadName = "==== Thread " + sourceId + " MsgHandler ==== ";
 					this.setName(threadName);
 					
-//					log.info(threadName + "sourceNode : " + sourceNode.getId() + " responseNumDecrese");
+//					log.debug(threadName + "sourceNode : " + sourceNode.getId() + " responseNumDecrese");
 					
-					log.info(threadName + "topK : " + topK + " , " + targetId + " ==> " + sourceId);
+					log.debug(threadName + "topK : " + topK + " , " + targetId + " ==> " + sourceId);
 					if(Executor.isFirst){
 						sourceNode.putStockPair(targetId, stock);
-						log.info(threadName + targetId + " ==> " + sourceId);
-						log.info(threadName + "sourceNode.getStock() : " + sourceNode.getStock());
-						log.info(threadName + "sourceNode.getStockPair() : " + sourceNode.getStockPair());
+						log.debug(threadName + targetId + " ==> " + sourceId);
+						log.debug(threadName + "sourceNode.getStock() : " + sourceNode.getStock());
+//						log.debug(threadName + "sourceNode.getStockPair() : " + sourceNode.getStockPair());
 					}
 					sourceNode.merge(topK);
 					sourceNode.responseNumDecrese();
@@ -347,8 +367,11 @@ public class NodeHandlerImpl implements INodeHandler {
 		}
 	}
 	
+	private static long begin;
 	public void start(Node node, int topValue){
-		log.info("==== Thread " + node.getId() + " Main       ==== " + "visiting node : " + node);
+		totalK = 0;
+		begin = System.currentTimeMillis();
+		log.debug("==== Thread " + node.getId() + " Main       ==== " + "visiting node : " + node);
 		
 		startNode = node;
 		node.setK(topValue);
@@ -360,7 +383,7 @@ public class NodeHandlerImpl implements INodeHandler {
 	public void business(Node node) {
 //		if(!node.isVisited()){
 			String threadName = "==== Thread " + node.getId() + " Main       ==== ";
-			log.info(threadName + "visiting node : " + node);
+			log.debug(threadName + "visiting node : " + node);
 //			node.setVisited(true);
 			
 			fireRequest(node);
@@ -372,9 +395,9 @@ public class NodeHandlerImpl implements INodeHandler {
 		
 		String threadName = "==== Thread " + sourceNode.getId() + " Main       ==== ";
 		
-		log.info(threadName + "showLinkStartedStatus : " + sourceNode.showLinkStartedStatus());
-		log.info(threadName + "stockPair : " + sourceNode.getStockPair());
-		log.info(threadName + "topk : " + sourceNode.getK());
+		log.debug(threadName + "showLinkStartedStatus : " + sourceNode.showLinkStartedStatus());
+		log.debug(threadName + "stockPair : " + sourceNode.getStockPair());
+		log.debug(threadName + "topk : " + sourceNode.getK());
 		
 		for(String targetNodeId : sourceNode.getLink()){
 				Node targetNode = Configuration.getNode(targetNodeId);
@@ -394,8 +417,12 @@ public class NodeHandlerImpl implements INodeHandler {
 				}
 				
 		}
-		if(sourceNode.isLeaf()){
-			leafResult.add(sourceNode);
+		if(Executor.isFirst){
+			if(sourceNode.isLeaf()){
+				leafResult.add(sourceNode);
+			}
+		}else{
+			leafResult = savedLeafResult;
 		}
 	}
 	private void send(Node targetNode, Node sourceNode){
@@ -420,6 +447,7 @@ public class NodeHandlerImpl implements INodeHandler {
 			}else{
 				k = sourceNode.getNumFromStockValue(targetNode.getId(), sourceNode.getK());
 			}
+			totalK += k;
 			request.put("k", k);
 			
 			dos.writeUTF(JSON.toJSONString(request));

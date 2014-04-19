@@ -282,7 +282,7 @@ public class Node {
 	}
 	
 	public String toString(){
-		String returnStr = "id : " + this.id + ", link : " + this.link;
+		String returnStr = "id : " + this.id;
 		
 //		if(this.link.size() > 0){
 //			returnStr += "link : ";

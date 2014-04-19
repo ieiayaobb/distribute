@@ -25,17 +25,17 @@ public class Executor {
 	public static void main(String[] args) {
 		log.info("====== begin ======");
 //		Configuration conf = new ConfigLoader().load("target/classes/conf.xml");
-		Configuration conf = new ConfigLoader().load(new ConfGenerator().generateNode(10 , 15));
+		Configuration conf = new ConfigLoader().load(new ConfGenerator().generateNode(1000 , 15));
 		
 		Map<String,Node> allNodes = conf.getAllNodes();
-		log.info("allNodes : " + allNodes);
+//		log.info("allNodes : " + allNodes);
 		
 		Map<String,INodeHandler> nodeHandlerMap = new HashMap<String,INodeHandler>();
 		log.info("------ init all lisnter -------");
 		for(String nodeKey : allNodes.keySet()){
 			Node node  = allNodes.get(nodeKey);
-			log.info(node.getId() + " stock : " + node.getStock());
-			log.info(node.getId() + " top : " + node.getTopK());
+//			log.info(node.getId() + " stock : " + node.getStock());
+//			log.info(node.getId() + " top : " + node.getTopK());
 			INodeHandler nodeHandler = new NodeHandlerImpl(node);
 			nodeHandlerMap.put(nodeKey, nodeHandler);
 			
@@ -44,11 +44,10 @@ public class Executor {
 //			}
 		}
 //		NodeHandlerImpl.setListening(true);
-		
 		start(allNodes, nodeHandlerMap,TOP_K_10);
 		
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -59,8 +58,9 @@ public class Executor {
 			node.resetValue();
 			node.setStarted(false);
 		}
+//		NodeHandlerImpl.resetLeafResult();
 		
-		start(allNodes, nodeHandlerMap, TOP_K_12);
+		start(allNodes, nodeHandlerMap, TOP_K_10);
 		
 //		for(String nodeHanlderKey : nodeHandlerMap.keySet()){
 //			nodeHandlerMap.get(nodeHanlderKey).closeListen();
